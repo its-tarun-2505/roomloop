@@ -20,7 +20,6 @@ import {
 import { 
   UsersIcon, 
   ClockIcon, 
-  TagIcon, 
   UserIcon,
   ArrowLeftIcon,
   PaperAirplaneIcon,
@@ -261,46 +260,37 @@ const RoomDetail = () => {
   // Handle rescheduling room
   const handleRescheduleRoom = async (e) => {
     e.preventDefault();
-    if (isRescheduling) return;
-
+    setIsRescheduling(true);
+    
     try {
-      setIsRescheduling(true);
+      // Get current room status
+      const currentStatus = calculateRoomStatus(room.startTime, room.endTime);
       
-      // Format the new dates and times
+      // Validate times
       const newStartDateTime = new Date(`${newStartDate}T${newStartTime}`);
       const newEndDateTime = new Date(`${newEndDate}T${newEndTime}`);
       
-      // Validate times
       if (newEndDateTime <= newStartDateTime) {
         toast.error('End time must be after start time');
+        setIsRescheduling(false);
         return;
       }
       
-      const response = await api.put(`/api/rooms/${roomId}/reschedule`, {
-        newStartTime: newStartDateTime,
-        newEndTime: newEndDateTime
-      });
-      
-      // Update room in local state
-      setRoom(prevRoom => ({
-        ...prevRoom,
+      const _response = await api.put(`/api/rooms/${roomId}/reschedule`, {
         startTime: newStartDateTime.toISOString(),
         endTime: newEndDateTime.toISOString(),
-        status: 'scheduled',
-        wasRescheduled: true
-      }));
+      });
       
-      // Update status
-      setStatus('scheduled');
+      // Update the room data
+      await fetchRoomData();
       
       // Close the modal
       setShowRescheduleModal(false);
       
-      // Use toast ID to prevent duplicates
-      if (toastIDs.reschedule) {
-        toast.dismiss(toastIDs.reschedule);
+      // Show success message
+      if (!toastIDs.reschedule) {
+        toastIDs.reschedule = toast.success('Room rescheduled successfully!');
       }
-      toastIDs.reschedule = toast.success('Room rescheduled successfully');
     } catch (err) {
       console.error('Error rescheduling room:', err);
       toast.error(err.response?.data?.message || 'Failed to reschedule room');
@@ -311,40 +301,26 @@ const RoomDetail = () => {
 
   // Handle closing room
   const handleCloseRoom = async () => {
-    if (!window.confirm('Are you sure you want to close this room? This action cannot be undone.')) {
+    if (!window.confirm('Are you sure you want to close this room now? This action cannot be undone.')) {
       return;
     }
     
     setIsClosingRoom(true);
     try {
-      const res = await api.put(`/api/rooms/${roomId}/close`);
+      const _res = await api.put(`/api/rooms/${roomId}/close`);
       
-      // Dismiss any previous toasts
-      if (toastIDs.close) {
-        toast.dismiss(toastIDs.close);
-      }
-      
-      // Success toast
-      toastIDs.close = toast.success('Room closed successfully');
-      
-      // Update room data
-      setRoom(prevRoom => ({
-        ...prevRoom,
-        status: 'closed',
-        endTime: new Date().toISOString() // Set end time to current time
-      }));
-      
-      // Update status
+      // Update the room status
       setStatus('closed');
+      
+      // Update the room data
+      await fetchRoomData();
+      
+      // Show success message
+      if (!toastIDs.close) {
+        toastIDs.close = toast.success('Room closed successfully');
+      }
     } catch (err) {
       console.error('Error closing room:', err);
-      
-      // Dismiss any previous toasts
-      if (toastIDs.close) {
-        toast.dismiss(toastIDs.close);
-      }
-      
-      // Error toast
       toastIDs.close = toast.error(err.response?.data?.message || 'Failed to close the room');
     } finally {
       setIsClosingRoom(false);
@@ -370,30 +346,29 @@ const RoomDetail = () => {
   // Handle sending message
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim() || isSubmittingMessage) return;
+    
+    if (!newMessage.trim()) return;
+    if (isSubmittingMessage) return;
+    
+    setIsSubmittingMessage(true);
     
     try {
-      setIsSubmittingMessage(true);
-      
-      // Send message to server via API
       const response = await api.post('/api/messages', {
-        roomId,
+        room: roomId,
         content: newMessage
       });
       
-      // Emit the message to Socket.io for real-time updates
+      // Emit to Socket.io
       socketSendMessage(roomId, response.data);
       
-      // Add the message to the local state (optimistic update)
+      // Add message to state
       setMessages(prevMessages => [...prevMessages, response.data]);
       
-      // Clear the input field
+      // Clear input
       setNewMessage('');
       
       // Scroll to bottom of messages
-      setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     } catch (err) {
       console.error('Error sending message:', err);
       toast.error(err.response?.data?.message || 'Failed to send message');
@@ -405,19 +380,19 @@ const RoomDetail = () => {
   // Handle adding reaction to the room
   const handleAddReaction = async (emoji) => {
     try {
-      // Send reaction to server via API
+      // eslint-disable-next-line no-unused-vars
       const response = await api.post('/api/reactions', {
-        roomId,
-        emoji
+        room: roomId,
+        emoji: emoji
       });
       
-      // Emit the reaction to Socket.io for real-time updates
+      // Emit to Socket.io
       socketSendReaction(roomId, response.data);
       
-      // Add the reaction to the local state (optimistic update)
+      // Add reaction to state
       setReactions(prevReactions => [...prevReactions, response.data]);
       
-      // Update reaction summary
+      // Fetch updated summary
       fetchReactionSummary();
     } catch (err) {
       console.error('Error adding reaction:', err);
@@ -429,50 +404,71 @@ const RoomDetail = () => {
   const handleAddMessageReaction = async (messageId, emoji) => {
     try {
       // Check if user already has a reaction on this message
-      const message = messages.find(msg => msg._id === messageId);
-      const existingUserReaction = message?.reactions?.find(reaction => reaction.user._id === user._id);
+      const message = messages.find(m => m._id === messageId);
+      const existingUserReaction = message?.reactions?.find(
+        r => r.user._id === user._id
+      );
       
-      // If user clicks the same emoji they already reacted with, remove it
+      // If user already has the same reaction, remove it
       if (existingUserReaction && existingUserReaction.emoji === emoji) {
-        // Send request to remove reaction
+        // eslint-disable-next-line no-unused-vars
         const response = await api.delete(`/api/messages/${messageId}/reactions/${existingUserReaction._id}`);
         
-        // Emit the message reaction removal to Socket.io for real-time updates
-        socketSendMessageReaction(roomId, messageId, {
-          removed: true,
-          user: { _id: user._id }
-        });
+        // Update UI optimistically
+        setMessages(prevMessages => prevMessages.map(msg => {
+          if (msg._id === messageId) {
+            return {
+              ...msg,
+              reactions: msg.reactions.filter(r => r.user._id !== user._id)
+            };
+          }
+          return msg;
+        }));
       } 
-      // If user already has a different reaction, replace it
+      // If user has a different reaction, update it
       else if (existingUserReaction) {
-        // Send request to update reaction
+        // eslint-disable-next-line no-unused-vars
         const response = await api.put(`/api/messages/${messageId}/reactions/${existingUserReaction._id}`, {
-          emoji
+          emoji: emoji
         });
         
-        // Emit the message reaction update to Socket.io for real-time updates
-        socketSendMessageReaction(roomId, messageId, {
-          emoji,
-          user: { _id: user._id },
-          updated: true
-        });
-      }
+        // Update UI optimistically
+        setMessages(prevMessages => prevMessages.map(msg => {
+          if (msg._id === messageId) {
+            return {
+              ...msg,
+              reactions: msg.reactions.map(r => 
+                r.user._id === user._id ? { ...r, emoji } : r
+              )
+            };
+          }
+          return msg;
+        }));
+      } 
       // Otherwise, add a new reaction
       else {
-        // Send message reaction to server via API
+        // eslint-disable-next-line no-unused-vars
         const response = await api.post(`/api/messages/${messageId}/reactions`, {
-          emoji
+          emoji: emoji
         });
         
-        // Emit the message reaction to Socket.io for real-time updates
-        socketSendMessageReaction(roomId, messageId, {
-          emoji,
-          user: { _id: user._id }
-        });
+        // Update UI optimistically
+        setMessages(prevMessages => prevMessages.map(msg => {
+          if (msg._id === messageId) {
+            return {
+              ...msg,
+              reactions: [...(msg.reactions || []), {
+                emoji,
+                user: { _id: user._id, username: user.username }
+              }]
+            };
+          }
+          return msg;
+        }));
       }
       
-      // Refresh messages to get updated reactions
-      fetchMessages();
+      // Emit to Socket.io
+      socketSendMessageReaction(roomId, messageId, { emoji });
     } catch (err) {
       console.error('Error managing message reaction:', err);
       toast.error(err.response?.data?.message || 'Failed to manage reaction on message');
@@ -862,6 +858,18 @@ const RoomDetail = () => {
       );
     }
   }, [showRescheduleModal, room]);
+
+  // Initialize Socket.io and join room if user is a participant
+  useEffect(() => {
+    if (room && status === 'live') {
+      if (isJoined) {
+        handleJoinRoom();
+      } else if (isCreator) {
+        handleJoinRoom();
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [room, status]);
 
   if (loading) {
     return (

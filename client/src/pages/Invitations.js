@@ -14,7 +14,6 @@ import {
   XMarkIcon, 
   ClockIcon,
   UserIcon,
-  TagIcon
 } from '@heroicons/react/24/outline';
 
 const Invitations = () => {

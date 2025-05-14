@@ -33,6 +33,7 @@ const ExploreRooms = () => {
 
   useEffect(() => {
     fetchRooms();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters]);
 
   const handleRefresh = () => {
