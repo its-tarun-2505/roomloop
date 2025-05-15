@@ -2,7 +2,7 @@ const express = require('express');
 const dotenv = require('dotenv');
 const morgan = require('morgan');
 const cors = require('cors');
-const connectDB = require('./config/db');
+// const connectDB = require('./config/db');
 const path = require('path');
 const http = require('http');
 const socketio = require('socket.io');
@@ -14,9 +14,13 @@ dotenv.config();
 // Ensure environment variables are properly set
 require('./config/setupEnv');
 
+// Import after environment setup
+const connectToAtlas = require('./config/atlasConfig');
+
 // Connect to database
+// connectDB();
 console.log('Starting MongoDB Atlas connection...');
-connectDB().then(() => {
+connectToAtlas().then(() => {
   console.log('MongoDB Atlas connection successful, server ready to accept requests.');
 }).catch(err => {
   console.error('Failed to connect to MongoDB Atlas:', err);
@@ -29,8 +33,8 @@ const server = http.createServer(app);
 const io = socketio(server, {
   cors: {
     origin: process.env.NODE_ENV === 'production' 
-      ? process.env.CLIENT_URL 
-      : 'http://localhost:3000',
+      ? false 
+      : ['http://localhost:3000', 'http://127.0.0.1:3000'],
     methods: ['GET', 'POST'],
     credentials: true
   }
@@ -130,12 +134,7 @@ io.on('connection', socket => {
 
 // Middleware
 app.use(express.json());
-app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? process.env.CLIENT_URL 
-    : 'http://localhost:3000',
-  credentials: true,
-}));
+app.use(cors());
 
 // Dev logging middleware
 if (process.env.NODE_ENV === 'development') {
@@ -172,55 +171,21 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Serve static files from the React app in production
+// Serve static assets in production
 if (process.env.NODE_ENV === 'production') {
   // Set static folder
-  app.use(express.static(path.join(__dirname, '../client/build')));
+  app.use(express.static('client/build'));
 
-  // Any routes not caught by API will be redirected to index.html
   app.get('*', (req, res) => {
-    res.sendFile(path.resolve(__dirname, '../client/build', 'index.html'));
+    res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'));
   });
 }
 
-// In Vercel's serverless environment, we don't need port binding
-// Only define port for local development
-const isDev = process.env.NODE_ENV !== 'production';
-const port = isDev ? (process.env.PORT || 4000) : null;
+const PORT = process.env.PORT || 5500;
 
-// Add a root route that Vercel can use
-app.get('/', (req, res) => {
-  res.status(200).json({ 
-    status: 'OK', 
-    message: 'RoomLoop API is running', 
-    environment: process.env.NODE_ENV,
-    timestamp: new Date().toISOString()
-  });
-});
-
-// Add CORS headers
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', process.env.CLIENT_URL || '*');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-  next();
-});
-
-// Only listen on a port for local development
-// In production (Vercel), we export the app directly
-if (isDev) {
-  server.listen(port, '0.0.0.0', () => {
-    console.log(`Server running in development mode on port ${port}`);
-    console.log(`API URL: http://localhost:${port}`);
-    console.log(`Socket.io server is running`);
-  });
-} else {
-  console.log('Running in production mode on Vercel (serverless)');
-}
-
-// Export the Express API for Vercel
-module.exports = app; 
+server.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+  console.log(`Environment: ${process.env.NODE_ENV}`);
+  console.log(`API URL: http://localhost:${PORT}`);
+  console.log(`Socket.io server is running`);
+}); 

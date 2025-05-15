@@ -18,8 +18,6 @@ export const SocketProvider = ({ children }) => {
       // Get the API URL from environment or use default
       const apiUrl = process.env.REACT_APP_API_URL || '';
       
-      console.log(`Connecting to Socket.io at: ${apiUrl}`);
-      
       // Create Socket instance
       socketInstance = io(apiUrl, {
         auth: { token },
@@ -27,8 +25,6 @@ export const SocketProvider = ({ children }) => {
         reconnection: true,
         reconnectionAttempts: 5,
         reconnectionDelay: 1000,
-        // Add transport options for more reliable connections
-        transports: ['websocket', 'polling'],
       });
       
       // Socket connection event listeners

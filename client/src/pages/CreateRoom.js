@@ -16,7 +16,6 @@ const CreateRoom = () => {
     formState: { errors },
   } = useForm();
 
-  // eslint-disable-next-line no-unused-vars
   const roomType = watch('type', 'private');
 
   const onSubmit = async (data) => {
