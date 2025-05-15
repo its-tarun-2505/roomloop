@@ -183,11 +183,11 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
-const PORT = process.env.PORT || 5500;
+const port = process.env.PORT || 10000;
 
-server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+server.listen(port, () => {
+  console.log(`Server running on port ${port}`);
   console.log(`Environment: ${process.env.NODE_ENV}`);
-  console.log(`API URL: http://localhost:${PORT}`);
+  console.log(`API URL: http://localhost:${port}`);
   console.log(`Socket.io server is running`);
 }); 
