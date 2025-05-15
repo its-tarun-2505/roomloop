@@ -183,10 +183,12 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
-// Set port for local development (not used in Vercel)
-const port = process.env.PORT || 4000;
+// In Vercel's serverless environment, we don't need port binding
+// Only define port for local development
+const isDev = process.env.NODE_ENV !== 'production';
+const port = isDev ? (process.env.PORT || 4000) : null;
 
-// Add a root route that Vercel can use to keep the function warm
+// Add a root route that Vercel can use
 app.get('/', (req, res) => {
   res.status(200).json({ 
     status: 'OK', 
@@ -196,7 +198,7 @@ app.get('/', (req, res) => {
   });
 });
 
-// Add CORS headers for Vercel
+// Add CORS headers
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', process.env.CLIENT_URL || '*');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
@@ -208,16 +210,16 @@ app.use((req, res, next) => {
   next();
 });
 
-// Use server.listen for local development, not needed for Vercel
-if (process.env.NODE_ENV !== 'production') {
+// Only listen on a port for local development
+// In production (Vercel), we export the app directly
+if (isDev) {
   server.listen(port, '0.0.0.0', () => {
-    console.log(`Server running on port ${port}`);
-    console.log(`Environment: ${process.env.NODE_ENV}`);
+    console.log(`Server running in development mode on port ${port}`);
     console.log(`API URL: http://localhost:${port}`);
     console.log(`Socket.io server is running`);
   });
 } else {
-  console.log('Running in production mode on Vercel');
+  console.log('Running in production mode on Vercel (serverless)');
 }
 
 // Export the Express API for Vercel
