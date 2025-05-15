@@ -1,3 +1,4 @@
+// Utility functions for date formatting and manipulation
 import { format, formatDistance, parseISO } from 'date-fns';
 
 // Format date to readable string (May 10, 2023)
