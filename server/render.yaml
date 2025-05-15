@@ -2,8 +2,9 @@ services:
   - type: web
     name: roomloop-api
     env: node
-    buildCommand: npm install
-    startCommand: bash render-start.sh
+    buildCommand: bash render-build.sh
+    startCommand: node server.js
+    plan: free
     envVars:
       - key: NODE_ENV
         value: production

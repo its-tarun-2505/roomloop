@@ -183,11 +183,18 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
+// Explicitly define the port Render will scan for
 const port = process.env.PORT || 10000;
 
-server.listen(port, () => {
-  console.log(`Server running on port ${port}`);
-  console.log(`Environment: ${process.env.NODE_ENV}`);
+// Add a new route that clearly shows the port is accessible
+app.get('/', (req, res) => {
+  res.send(`RoomLoop API Server running on port ${port}`);
+});
+
+// Listen on all network interfaces (important for containerized environments like Render)
+server.listen(port, '0.0.0.0', () => {
+  console.log(`Server running in ${process.env.NODE_ENV} mode on port ${port}`);
+  console.log(`Server is listening on all network interfaces (0.0.0.0:${port})`);
   console.log(`API URL: http://localhost:${port}`);
   console.log(`Socket.io server is running`);
 }); 
