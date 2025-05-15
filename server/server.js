@@ -183,17 +183,42 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
-// === Important: This is the exact format Render looks for ===
+// Set port for local development (not used in Vercel)
 const port = process.env.PORT || 4000;
 
-// Add a very simple route at the root path
+// Add a root route that Vercel can use to keep the function warm
 app.get('/', (req, res) => {
-  res.send('RoomLoop API is running');
+  res.status(200).json({ 
+    status: 'OK', 
+    message: 'RoomLoop API is running', 
+    environment: process.env.NODE_ENV,
+    timestamp: new Date().toISOString()
+  });
 });
 
-// Listen with 3 arguments format
-server.listen(port, '0.0.0.0', () => {
-  // Explicit format for Render detection
-  console.log(`Server is running on port ${port}`);
-  console.log(`Visit: http://0.0.0.0:${port}`);
-}); 
+// Add CORS headers for Vercel
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', process.env.CLIENT_URL || '*');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  next();
+});
+
+// Use server.listen for local development, not needed for Vercel
+if (process.env.NODE_ENV !== 'production') {
+  server.listen(port, '0.0.0.0', () => {
+    console.log(`Server running on port ${port}`);
+    console.log(`Environment: ${process.env.NODE_ENV}`);
+    console.log(`API URL: http://localhost:${port}`);
+    console.log(`Socket.io server is running`);
+  });
+} else {
+  console.log('Running in production mode on Vercel');
+}
+
+// Export the Express API for Vercel
+module.exports = app; 
