@@ -1,12 +1,8 @@
 #!/bin/bash
-echo "Starting RoomLoop API server..."
-echo "Environment: $NODE_ENV"
-echo "Port: $PORT"
-echo "Explicitly binding to port $PORT"
 
-# Make this script executable
-chmod +x render-start.sh
+echo "===== STARTING SERVER ====="
+echo "PORT: $PORT"
+echo "NODE_ENV: $NODE_ENV"
+echo "Will bind to 0.0.0.0:$PORT"
 
-# Start the server with explicit port logging
-echo "const port = process.env.PORT || 10000;"
-node server.js 
+node test-server.js 

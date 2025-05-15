@@ -3,7 +3,7 @@ services:
     name: roomloop-api
     env: node
     buildCommand: npm install
-    startCommand: node server.js
+    startCommand: npm run test-server
     envVars:
       - key: NODE_ENV
         value: production
