@@ -184,7 +184,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 // Explicitly define the port Render will scan for
-const port = process.env.PORT || 10000;
+const port = process.env.PORT || 4000;
 
 // Add a new route that clearly shows the port is accessible
 app.get('/', (req, res) => {
