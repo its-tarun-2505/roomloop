@@ -1,0 +1,110 @@
+# RoomLoop - Entity-Relationship Diagram
+
+This diagram represents the core data entities and their relationships in the RoomLoop platform.
+
+## Main Entities
+
+1. **User**
+   - Properties: id, username, email, password, profile, created_at
+   - Relationships: Creates Rooms, Joins Rooms, Sends Messages, Creates Reactions
+
+2. **Room**
+   - Properties: id, title, description, type (private/public), start_time, end_time, max_participants, tag, status, created_at
+   - Relationships: Created by User, Has Participants, Contains Messages, Contains Reactions
+
+3. **Invitation**
+   - Properties: id, room_id, inviter_id, invitee_id, status, created_at
+   - Relationships: Belongs to Room, Sent by User, Received by User
+
+4. **Message**
+   - Properties: id, room_id, user_id, content, created_at
+   - Relationships: Belongs to Room, Sent by User
+
+5. **Reaction**
+   - Properties: id, room_id, user_id, emoji, created_at
+   - Relationships: Belongs to Room, Created by User
+
+6. **Notification**
+   - Properties: id, user_id, type, content, read, created_at
+   - Relationships: Belongs to User, Can reference Room/Invitation
+
+## Mermaid E-R Diagram
+
+```mermaid
+erDiagram
+    USER {
+        string id PK
+        string username
+        string email
+        string password_hash
+        json profile
+        datetime created_at
+    }
+    
+    ROOM {
+        string id PK
+        string title
+        string description
+        enum type
+        datetime start_time
+        datetime end_time
+        int max_participants
+        string tag
+        enum status
+        string creator_id FK
+        datetime created_at
+    }
+    
+    INVITATION {
+        string id PK
+        string room_id FK
+        string inviter_id FK
+        string invitee_id FK
+        enum status
+        datetime created_at
+    }
+    
+    MESSAGE {
+        string id PK
+        string room_id FK
+        string user_id FK
+        string content
+        datetime created_at
+    }
+    
+    REACTION {
+        string id PK
+        string room_id FK
+        string user_id FK
+        string emoji
+        datetime created_at
+    }
+    
+    NOTIFICATION {
+        string id PK
+        string user_id FK
+        enum type
+        string content
+        boolean read
+        string reference_id
+        datetime created_at
+    }
+    
+    ROOM_PARTICIPANT {
+        string room_id FK
+        string user_id FK
+        datetime joined_at
+    }
+    
+    USER ||--o{ ROOM : "creates"
+    USER ||--o{ INVITATION : "sends"
+    USER ||--o{ INVITATION : "receives"
+    USER ||--o{ MESSAGE : "sends"
+    USER ||--o{ REACTION : "creates"
+    USER ||--o{ NOTIFICATION : "receives"
+    USER ||--o{ ROOM_PARTICIPANT : "participates in"
+    
+    ROOM ||--o{ INVITATION : "has"
+    ROOM ||--o{ MESSAGE : "contains"
+    ROOM ||--o{ REACTION : "contains"
+    ROOM ||--o{ ROOM_PARTICIPANT : "has"

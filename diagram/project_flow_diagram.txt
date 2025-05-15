@@ -1,0 +1,119 @@
+# RoomLoop - Project Flow Diagram
+
+This diagram represents the technical flow of data and interactions between the frontend, backend, and database components of the RoomLoop platform.
+
+## System Architecture Overview
+
+The RoomLoop application follows a standard MERN (MongoDB, Express.js, React.js, Node.js) architecture:
+
+1. **Frontend (React.js)**
+   - User Interface Components
+   - State Management with Context API or Redux
+   - API Service Integration
+   - Authentication Handling
+
+2. **Backend (Node.js + Express.js)**
+   - RESTful API Endpoints
+   - Authentication & Authorization (JWT)
+   - Business Logic
+   - Data Validation
+   - Error Handling
+
+3. **Database (MongoDB)**
+   - Document-based Storage
+   - Mongoose ODM for Schema Validation
+   - Data Relationships
+   - Indexing for Performance
+
+## Key Technical Flows
+
+1. **Authentication Flow**
+2. **Room Creation Flow**
+3. **Room Invitation Flow**
+4. **Room Joining Flow**
+5. **Room Interaction Flow**
+6. **Notification Delivery Flow**
+
+## Mermaid Project Flow Diagram
+
+```mermaid
+flowchart TD
+    %% Frontend Components
+    subgraph Frontend
+        UI[User Interface]
+        State[State Management]
+        APIService[API Service]
+        Auth[Auth Handler]
+    end
+    
+    %% Backend Components
+    subgraph Backend
+        Routes[API Routes]
+        Controllers[Controllers]
+        Middleware[Middleware]
+        Models[Data Models]
+        Utils[Utilities]
+    end
+    
+    %% Database
+    subgraph Database
+        MongoDB[(MongoDB)]
+        Collections{Collections}
+    end
+    
+    %% Frontend Flow
+    UI --> State
+    State --> APIService
+    APIService --> Auth
+    Auth --> APIService
+    
+    %% Frontend to Backend
+    APIService <--> |HTTP/REST| Routes
+    
+    %% Backend Flow
+    Routes --> Middleware
+    Middleware --> Controllers
+    Controllers --> Models
+    Controllers --> Utils
+    Models <--> |Mongoose| MongoDB
+    
+    %% Database Structure
+    MongoDB --> Collections
+    Collections --> Users[(Users)]
+    Collections --> Rooms[(Rooms)]
+    Collections --> Invitations[(Invitations)]
+    Collections --> Messages[(Messages)]
+    Collections --> Reactions[(Reactions)]
+    Collections --> Notifications[(Notifications)]
+    Collections --> RoomParticipants[(Room Participants)]
+    
+    %% Authentication Flow
+    UI --> |1. User enters credentials| State
+    State --> |2. Dispatch login action| APIService
+    APIService --> |3. POST /api/auth/login| Routes
+    Routes --> |4. Validate request| Middleware
+    Middleware --> |5. Process login| Controllers
+    Controllers --> |6. Verify credentials| Models
+    Models --> |7. Find user| MongoDB
+    MongoDB --> |8. Return user data| Models
+    Models --> |9. Generate JWT| Controllers
+    Controllers --> |10. Return token| Routes
+    Routes --> |11. Store token| APIService
+    APIService --> |12. Update auth state| State
+    State --> |13. Render authenticated UI| UI
+    
+    %% Room Creation Flow
+    UI --> |1. Submit room form| State
+    State --> |2. Dispatch create room| APIService
+    APIService --> |3. POST /api/rooms| Routes
+    Routes --> |4. Auth check| Middleware
+    Middleware --> |5. Create room| Controllers
+    Controllers --> |6. Save room| Models
+    Models --> |7. Store in DB| MongoDB
+    MongoDB --> |8. Return room ID| Models
+    Models --> |9. Process result| Controllers
+    Controllers --> |10. Return new room| Routes
+    Routes --> |11. Update rooms state| APIService
+    APIService --> |12. Show new room| State
+    State --> |13. Display room card| UI
+``` 

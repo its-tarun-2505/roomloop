@@ -1,0 +1,77 @@
+# Dependencies
+node_modules/
+/.pnp
+.pnp.js
+
+# Environment variables
+.env
+.env.local
+.env.development
+.env.development.local
+.env.test
+.env.test.local
+.env.production
+.env.production.local
+sample.env
+.env.backup
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build directories
+/build/
+/dist/
+client/build/
+client/dist/
+
+# Coverage directory
+/coverage/
+client/coverage/
+
+# Misc
+.DS_Store
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.eslintcache
+.vercel
+.next
+*.tgz
+*.tsbuildinfo
+.npm
+.history
+
+# Temp files
+.temp/
+.tmp/
+/temp/
+/tmp/
+/cache/
+
+# Debug files
+.debug/
+debug/
+debug.log
+
+# MongoDB dump files
+*.dump
+mongodump/
+
+# Editor specific
+*.sublime-project
+*.sublime-workspace
+*.komodoproject
+.komodotools/
+*.iml
+.prettierrc
+.eslintrc
+jsconfig.json
+tsconfig.json

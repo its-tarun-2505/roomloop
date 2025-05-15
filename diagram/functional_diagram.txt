@@ -1,0 +1,87 @@
+# RoomLoop - Functional Diagram
+
+This diagram represents the main functional components and their interactions in the RoomLoop platform.
+
+## Main Components
+
+1. **Authentication System**
+   - User Registration
+   - User Login
+   - JWT Token Management
+   - Authorization Check
+
+2. **Room Management**
+   - Room Creation
+   - Room Status Management
+   - Room Listing (Public/Private)
+   - Room Time Window Management
+
+3. **Invitation System**
+   - Invite Creation
+   - Invite Delivery
+   - Invite Acceptance/Rejection
+   - Join Code Generation (Public Rooms)
+
+4. **Room Interaction**
+   - Participant Management
+   - Message Handling
+   - Reaction Processing
+   - Room Status Updates
+
+5. **Notification System**
+   - Create Notifications
+   - Deliver Notifications
+   - Mark Notifications as Read
+   - Clear Notifications
+
+6. **Analytics & History**
+   - Room History
+   - Participation Tracking
+   - Room Summary
+   - Trending Calculations
+
+## Mermaid Functional Diagram
+
+```mermaid
+flowchart TD
+    User[User] --> Auth[Authentication System]
+    
+    Auth --> |Authenticated| Dashboard[User Dashboard]
+    
+    Dashboard --> CreateRoom[Create Room]
+    Dashboard --> ExploreRooms[Explore Rooms]
+    Dashboard --> ViewInvites[View Invitations]
+    Dashboard --> ViewNotifications[View Notifications]
+    Dashboard --> ViewHistory[View Room History]
+    
+    CreateRoom --> |Creates| Room[Room]
+    
+    Room --> |Auto Updates Status| RoomStatus{Room Status}
+    RoomStatus --> |Scheduled| WaitingRoom[Waiting Room]
+    RoomStatus --> |Live| LiveRoom[Live Room]
+    RoomStatus --> |Closed| ClosedRoom[Closed Room]
+    
+    Room --> |For Private| InviteSystem[Invitation System]
+    Room --> |For Public| JoinCode[Public Join Code]
+    
+    InviteSystem --> |Sends| Notification[Notification System]
+    JoinCode --> ExploreRooms
+    
+    Notification --> |Notifies| InvitedUser[Invited User]
+    InvitedUser --> |Views| ViewInvites
+    ViewInvites --> |Accepts| LiveRoom
+    
+    LiveRoom --> |Enables| RoomInteraction[Room Interaction]
+    
+    RoomInteraction --> Messages[Message Exchange]
+    RoomInteraction --> Reactions[Emoji Reactions]
+    RoomInteraction --> ParticipantList[Participant List]
+    
+    ClosedRoom --> |Stored in| RoomHistory[Room History]
+    RoomHistory --> |Displayed in| ViewHistory
+    
+    ExploreRooms --> |Shows Public| AvailableRooms[Available Rooms]
+    AvailableRooms --> |Filtered by| RoomTags[Room Tags]
+    AvailableRooms --> |Filtered by| RoomStatus
+    AvailableRooms --> |Join If Available| LiveRoom
+``` 
