@@ -17,6 +17,7 @@ export const SocketProvider = ({ children }) => {
     if (user && token) {
       // Get the API URL from environment or use default
       const apiUrl = process.env.REACT_APP_API_URL || '';
+      console.log('Connecting to Socket.io server at:', apiUrl);
       
       // Create Socket instance
       socketInstance = io(apiUrl, {
