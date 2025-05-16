@@ -1,5 +1,6 @@
 # RoomLoop – The Drop-In Events & Micro-Meetup Platform
 
+🔗 **Live Demo:** [https://roomloop.com](https://roomloop-vsru.vercel.app/)
 RoomLoop is a casual, link-free micro-event platform. Users create temporary "Rooms" with topics, people get notified, and anyone can hop in when the room is live.
 
 ## Overview
