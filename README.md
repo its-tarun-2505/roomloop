@@ -159,10 +159,6 @@ roomloop/
 └── README.md               # Project documentation
 ```
 
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
 ## Acknowledgments
 
 - This project was built as a demonstration for a MERN stack application
